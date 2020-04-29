@@ -27,14 +27,20 @@ namespace restful_API.Controllers
         }
 
         //чтобы не было ошибки "json cycle detected" нужно в Startup прописать .AddNewtonsoftJson
-        [HttpGet("{login}")]
-        public IEnumerable<WeatherForecast> GetUserForecasts(string login)
+        [HttpGet]
+        public IEnumerable<WeatherForecast> GetUserForecasts([FromBody]UserWeatherJSON user)
         {
+            var userFromDb = _db.Users
+                .FirstOrDefault(o => o.JWT.Value == user.JwtValue);
+            if (userFromDb == null)
+                throw new Exception("No User found");
+
             var userforecastsFromDb = _db.UserWeatherForecasts
-                .Where(uw => uw.UserLogin == login)
-                .Include(uw=>uw.WeatherForecast)
+                .Where(uw => uw.UserLogin == userFromDb.Login)
+                .Include(uw => uw.WeatherForecast)
                 .ToList();
             var forecasts = userforecastsFromDb.Select(f => f.WeatherForecast);
+
             return forecasts;
         }
 
@@ -50,23 +56,26 @@ namespace restful_API.Controllers
             return Ok(user);
         }
 
-
         [HttpPut]
-        public ActionResult UpdateUserCityList([FromBody]UserWeatherForecast userAndWeather)
+        public ActionResult UpdateUserCityList([FromBody]UserWeatherJSON userAndWeather)
         {
+            var jwtFromDb = _db.JWTs
+                .FirstOrDefault(o => o.Value == userAndWeather.JwtValue);
+            if (jwtFromDb == null)
+                return NotFound();
+
             var userFromDb = _db.Users
-                .FirstOrDefault(u => u.Login == userAndWeather.User.Login 
-                                    && u.Password == userAndWeather.User.Password);
+                .FirstOrDefault(o => o.JWT == jwtFromDb);
             if (userFromDb == null)
-                return BadRequest();
+                return NotFound();
 
             var forecastFromDb = _db.WeatherForecasts
-                .FirstOrDefault(f => f.City == userAndWeather.WeatherForecast.City);
+                .FirstOrDefault(f => f.City == userAndWeather.CityName);
             if (forecastFromDb == null)
                 return BadRequest();
 
 
-            var uwf = new UserWeatherForecast 
+            var uwf = new UserWeatherForecast
             {
                 UserLogin = userFromDb.Login,
                 WeatherForecastId = forecastFromDb.Id,
@@ -76,5 +85,10 @@ namespace restful_API.Controllers
             _db.SaveChanges();
             return Ok();
         }
+    }
+    public class UserWeatherJSON
+    {
+        public string JwtValue { get; set; }
+        public string CityName { get; set; }
     }
 }
