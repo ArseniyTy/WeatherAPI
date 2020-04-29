@@ -7,6 +7,7 @@ namespace restful_API.Models
         public DbSet<WeatherForecast> WeatherForecasts { get; set; }
         public DbSet<User> Users{ get; set; }
         public DbSet<UserWeatherForecast> UserWeatherForecasts { get; set; }
+        public DbSet<JWT> JWTs { get; set; }
 
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base (options)
@@ -29,6 +30,11 @@ namespace restful_API.Models
             modelBuilder.Entity<UserWeatherForecast>()
                 .HasOne(uwf => uwf.WeatherForecast)
                 .WithMany(w => w.UserWeatherForecasts);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.JWT)
+                .WithOne(t => t.User)
+                .HasForeignKey<JWT>(t => t.UserLogin);
         }
     }
 }

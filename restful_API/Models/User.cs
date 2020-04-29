@@ -12,6 +12,7 @@ namespace restful_API.Models
         public string Password { get; set; }
 
         public virtual IList<UserWeatherForecast> UserWeatherForecasts { get; set; }
+        public JWT JWT { get; set; }
 
         public User()
         {
