@@ -39,13 +39,12 @@ namespace restful_API.Controllers
         }
 
 
-        //сделать массів городов, проход і добавленіе каждогго
         //мб добавіть, чтобы /addcity, а не просто put
-        [HttpPut]
-        public ActionResult UpdateUserCityList([FromBody]JWTWithObject<string> jwtWithCityName)
+        [HttpPut("citiesAdding")]
+        public ActionResult UpdateUserCityList([FromBody]JWTWithObject<List<string>> JWTWithCityName)
         {
             var jwtFromDb = _db.JWTs
-                .FirstOrDefault(o => o.Value == jwtWithCityName.JwtValue);
+                .FirstOrDefault(o => o.Value == JWTWithCityName.JwtValue);
             if (jwtFromDb == null)
                 return NotFound();
 
@@ -54,19 +53,30 @@ namespace restful_API.Controllers
             if (userFromDb == null)
                 return NotFound();
 
-            var forecastFromDb = _db.WeatherForecasts
-                .FirstOrDefault(f => f.City == jwtWithCityName.Object);
-            if (forecastFromDb == null)
-                return BadRequest();
+            //подгружаем его прогнозы для нахожденія повторок
+            _db.Entry(userFromDb).Collection(u => u.UserWeatherForecasts).Load();
 
-
-            var uwf = new UserWeatherForecast
+            foreach (var city in JWTWithCityName.Object)
             {
-                UserLogin = userFromDb.Login,
-                WeatherForecastId = forecastFromDb.Id,
-            };
-            userFromDb.UserWeatherForecasts.Add(uwf);
-            forecastFromDb.UserWeatherForecasts.Add(uwf);
+                var forecastFromDb = _db.WeatherForecasts
+                .FirstOrDefault(f => f.City == city);
+                if (forecastFromDb == null)
+                    return BadRequest();
+
+                //еслі данный город уже есть в спіске у юзера, то нічего не делаем
+                if (userFromDb.UserWeatherForecasts.
+                    FirstOrDefault(uwf => uwf.WeatherForecastId == forecastFromDb.Id) != null)
+                    continue;
+
+
+                var uwf = new UserWeatherForecast
+                {
+                    UserLogin = userFromDb.Login,
+                    WeatherForecastId = forecastFromDb.Id,
+                };
+                userFromDb.UserWeatherForecasts.Add(uwf);
+                forecastFromDb.UserWeatherForecasts.Add(uwf);
+            }
             _db.SaveChanges();
             return Ok();
         }

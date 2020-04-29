@@ -4,6 +4,10 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using restful_API.Models.Interfaces;
+using System.Security.Cryptography;
+//https://codereview.stackexchange.com/questions/93614/salt-generation-in-c
+//(RNGCryptoServiceProvider)
+//(SHA512) - для пароля і для jwt
 
 namespace restful_API.Models
 {
