@@ -25,3 +25,8 @@ Advantages of JWT:
 
 (RNGCryptoServiceProvider)
 (SHA512)
+
+
+registrate(with loging and password)
+authentificate(with loging and password)
+authorize(with JWT)

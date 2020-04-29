@@ -16,9 +16,25 @@ namespace restful_API.Controllers
             _db = context;
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         public ActionResult CreateUser([FromBody]User user)
         {
+            var userFromDb = _db.Users.FirstOrDefault(u => u.Login == user.Login);
+            if (userFromDb != null)
+                return BadRequest();
+
+            _db.Users.Add(user);
+            _db.SaveChanges();
+            return Ok(user);
+        }
+
+        //надо jwt улучшать
+        [HttpPost("authentificate")]
+        public ActionResult AuthentificateUser([FromBody]User user)
+        {
+            //if (login != user.Login)
+            //    return BadRequest("2 different logins in request");
+
             var userFromDb = _db.Users.
                 FirstOrDefault(u => u.Login == user.Login && u.Password == user.Password);
             if (userFromDb == null)
@@ -41,8 +57,8 @@ namespace restful_API.Controllers
             return Ok(jwt.Value);
         }
 
-        [HttpGet]
-        public ActionResult CreateUser([FromBody]JWT jwt)
+        [HttpGet("authorize")]
+        public ActionResult AuthorizeUser([FromBody]JWT jwt)
         {
             var jwtFromDb = _db.JWTs.FirstOrDefault(u => u.Value == jwt.Value);
 
