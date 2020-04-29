@@ -21,12 +21,3 @@ Advantages of JWT:
 1)Security
 2)Comfortable work for users with multiple servers
 (часто используются несколько серверов, и никто не хочет, чтобы ты при переходе на новую страничку заново входил в акк)
-
-
-(RNGCryptoServiceProvider)
-(SHA512)
-
-
-registrate(with loging and password)
-authentificate(with loging and password)
-authorize(with JWT)
