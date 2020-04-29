@@ -1,0 +1,27 @@
+Authentication = logging in (checking if login and password are correct)
+Authoriztion = checking if the user that sends request is the same, that logged in
+
+Authorization:
+1)Based on Session Id	(store user in memory of the server
+			+ send session id as cookie
+			(request) - server check session id and returns response)
+MainIdea: info is stored on the server
+
+
+
+
+2)Based on JWT		(server doesn't store anth, create JWT with global solt
+			+ send JWT to browser
+			(request with JWT) - server verify JWT and get user FROM this JWT)
+
+MainIdea: info is stored on the client, and all info about the user is inside JWT
+No: JWT use HASHING and global solt. So it just like verifing passwords
+
+Advantages of JWT:
+1)Security
+2)Comfortable work for users with multiple servers
+(часто используются несколько серверов, и никто не хочет, чтобы ты при переходе на новую страничку заново входил в акк)
+
+
+(RNGCryptoServiceProvider)
+(SHA512)
