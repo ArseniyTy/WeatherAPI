@@ -28,15 +28,23 @@ namespace restful_API.Controllers
         }
 
         [HttpPost]
-        public ActionResult Post([FromBody]WeatherForecast data)
+        public ActionResult CreateForecast([FromBody]WeatherForecast data)
         {
             var cities = _db.WeatherForecasts.Select(o => o.City).ToArray();
             if (cities.Contains(data.City))
             {
-                return BadRequest();
+                return BadRequest("This forecast already exists");
             }
 
-            string result = GetDataFromAnotherAPI(data.City);
+            string result = "";
+            try
+            {
+                result = GetDataFromAnotherAPI(data.City);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
             JObject o = JObject.Parse(result);  //парсим в JSON объект
 
             string summary = (string)o["weather"][0]["main"];   //достаём из dictionary информацию
@@ -59,11 +67,19 @@ namespace restful_API.Controllers
 
         //обновление данных всех городов
         [HttpPatch]
-        public ActionResult Patch()
+        public ActionResult UpdateForecastsData()
         {
             foreach (var forecast in _db.WeatherForecasts.ToList())
             {
-                var result = GetDataFromAnotherAPI(forecast.City);
+                string result="";
+                try
+                {
+                    result = GetDataFromAnotherAPI(forecast.City);
+                }
+                catch(Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
                 JObject o = JObject.Parse(result);
 
                 string summary = (string)o["weather"][0]["main"];
@@ -85,7 +101,9 @@ namespace restful_API.Controllers
         {
             WebRequest request = WebRequest
                 .Create($"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}"); //посылаем запрос на сторонній сервер
+
             WebResponse response = request.GetResponse();   //получаем ответ
+
 
             var result = new StringBuilder();
             using (Stream stream = response.GetResponseStream())
@@ -103,5 +121,8 @@ namespace restful_API.Controllers
 
             return result.ToString();
         }
+
+
+        //DELETE - удаленіе прогнозов
     }
 }

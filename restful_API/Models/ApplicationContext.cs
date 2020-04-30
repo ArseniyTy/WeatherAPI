@@ -35,7 +35,8 @@ namespace restful_API.Models
             modelBuilder.Entity<User>()
                 .HasOne(u => u.JWT)
                 .WithOne(t => t.User)
-                .HasForeignKey<JWT>(t => t.UserLogin);
+                .HasForeignKey<JWT>(t => t.UserLogin)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

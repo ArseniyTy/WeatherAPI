@@ -21,13 +21,13 @@ namespace restful_API.Controllers
         }
 
         //чтобы не было ошибки "json cycle detected" нужно в Startup прописать .AddNewtonsoftJson
-        [HttpGet]
-        public IEnumerable<WeatherForecast> GetUserForecasts([FromBody]JWT jwt)
+        [HttpGet("forecasts")]
+        public ActionResult<IEnumerable<WeatherForecast>> GetUserForecasts([FromBody]JWT jwt)
         {
             var userFromDb = _db.Users
                 .FirstOrDefault(o => o.JWT.Value == jwt.Value);
             if (userFromDb == null)
-                throw new Exception("No User found");
+                return NotFound("No such JWT");
 
             var userforecastsFromDb = _db.UserWeatherForecasts
                 .Where(uw => uw.UserLogin == userFromDb.Login)
@@ -35,40 +35,41 @@ namespace restful_API.Controllers
                 .ToList();
             var forecasts = userforecastsFromDb.Select(f => f.WeatherForecast);
 
-            return forecasts;
+            return new ObjectResult(forecasts);
         }
 
 
-        //мб добавіть, чтобы /addcity, а не просто put
-        [HttpPut("citiesAdding")]
+        [HttpPut("citiesAdd")]
         public ActionResult UpdateUserCityList([FromBody]JWTWithObject<List<string>> JWTWithCityName)
         {
             var jwtFromDb = _db.JWTs
                 .FirstOrDefault(o => o.Value == JWTWithCityName.JwtValue);
             if (jwtFromDb == null)
-                return NotFound();
+                return NotFound("No such JWT");
 
             var userFromDb = _db.Users
                 .FirstOrDefault(o => o.JWT == jwtFromDb);
             if (userFromDb == null)
-                return NotFound();
+                return NotFound("No such JWT");
 
             //подгружаем его прогнозы для нахожденія повторок
             _db.Entry(userFromDb).Collection(u => u.UserWeatherForecasts).Load();
-
+            
+            //для каждого города із переданного спіска
             foreach (var city in JWTWithCityName.Object)
             {
                 var forecastFromDb = _db.WeatherForecasts
                 .FirstOrDefault(f => f.City == city);
+                //еслі данного города нет, то нічего не делаем
                 if (forecastFromDb == null)
-                    return BadRequest();
+                    continue;
 
                 //еслі данный город уже есть в спіске у юзера, то нічего не делаем
                 if (userFromDb.UserWeatherForecasts.
                     FirstOrDefault(uwf => uwf.WeatherForecastId == forecastFromDb.Id) != null)
                     continue;
 
-
+                //іначе добавляем прогноз к юзеру
                 var uwf = new UserWeatherForecast
                 {
                     UserLogin = userFromDb.Login,
@@ -80,5 +81,9 @@ namespace restful_API.Controllers
             _db.SaveChanges();
             return Ok();
         }
+
+        //Наверное в POST переделать верхній 
+        //DELETE - удаляет нужный спісок городов (по жвт)
+        //PUT/PATCH - обновляет уже імеюшийся список (по жвт)
     }
 }

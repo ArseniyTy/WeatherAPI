@@ -16,13 +16,9 @@ namespace restful_API.Controllers
             _db = context;
         }
 
-        [HttpPost("creation")]
+        [HttpPost("create")]
         public ActionResult CreateUser([FromBody]User user)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-
             var userFromDb = _db.Users.FirstOrDefault(u => u.Login == user.Login);
             if (userFromDb != null)
                 return BadRequest("The user with such a login currently exists");
@@ -32,12 +28,25 @@ namespace restful_API.Controllers
             return new ObjectResult(user);
         }
 
-        [HttpPost("authentification")]
+        [HttpDelete("delete")]
+        public ActionResult DeleteUser([FromBody]User user)
+        {
+            var userFromDb = _db.Users.
+                FirstOrDefault(u => u.Login == user.Login);
+            if (userFromDb == null)
+                return NotFound("There is no such a user");
+            if (userFromDb.Password != user.Password)
+                return new ForbidResult("Password is incorrect");
+
+
+            _db.Users.Remove(userFromDb);
+            _db.SaveChanges();
+            return Ok();
+        }
+
+        [HttpPost("authentificate")]
         public ActionResult AuthentificateUser([FromBody]User user)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userFromDb = _db.Users.
                 FirstOrDefault(u => u.Login == user.Login);
             if (userFromDb == null)
@@ -68,7 +77,7 @@ namespace restful_API.Controllers
             return Ok(jwt.Value);
         }
 
-        [HttpGet("authorization")]
+        [HttpGet("authorize")]
         public ActionResult AuthorizeUser([FromBody]JWT jwt)
         {
             var jwtFromDb = _db.JWTs.FirstOrDefault(u => u.Value == jwt.Value);
@@ -82,5 +91,8 @@ namespace restful_API.Controllers
 
             return Ok(userFromDb);
         }
+
+        // в POST переделать authentificate ??? - позыріть когда какой  і как в целом настроіть работу JWT токена 
+        //PUT/PATCH - поменять логін ілі пароля (передаём составной об'ект с прошлым і новым юзером)
     }
 }
