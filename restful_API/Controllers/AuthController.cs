@@ -28,6 +28,30 @@ namespace restful_API.Controllers
             return new ObjectResult(user);
         }
 
+        [HttpPut("update")]
+        public ActionResult UpdateUser([FromBody]Tuple<User,User> users)
+        {
+            var oldUser = users.Item1;
+            var newUser = users.Item2;
+
+
+            var userFromDb = _db.Users.
+                FirstOrDefault(u => u.Login == oldUser.Login);
+            if (userFromDb == null)
+                return NotFound("There is no such a user");
+            if (userFromDb.Password != oldUser.Password)
+                return new ForbidResult("Password is incorrect");
+
+
+            if(newUser.Login!=null)
+                userFromDb.Login = newUser.Login;
+            if (newUser.Password != null)
+                userFromDb.Password = newUser.Password;
+
+            _db.SaveChanges();
+            return new ObjectResult(userFromDb);
+        }
+
         [HttpDelete("delete")]
         public ActionResult DeleteUser([FromBody]User user)
         {
@@ -43,6 +67,10 @@ namespace restful_API.Controllers
             _db.SaveChanges();
             return Ok();
         }
+
+
+
+
 
         [HttpPost("authentificate")]
         public ActionResult AuthentificateUser([FromBody]User user)

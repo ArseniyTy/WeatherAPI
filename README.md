@@ -11,17 +11,29 @@
 |                         |
 |-------------------------|
 
-| Method    | URL                                           | Body                      | Description                                                  |
-| :-------: | :-------------------------------------------- | :---------                | :----------------------------------------------------------- |
-| GET       | http://localhost:44326/users                   | -                         | Get all users from database. For this     endpoint need JWT or it will be empty
-| POST      | http://localhost:44326/users/register          | <code>{<br />"firstName": "Jason23",<br />"lastName": "Watmore23",<br />"username": "jason2",<br /> "password": "123qwe"<br />}</code> | Registrate user, but not authenticate
-| POST      | http://localhost:44326/users/Authenticate      | <pre lang="json">{<br>"username": "jason",<br>"password": "123qwe"<br>}</pre>| Authenticate user
-| POST      | http://localhost:44326/users/Authenticate      | <pre lang="json">{<br>"username": "jason",<br>"password": "123qwe"<br>}</pre>| Authenticate user
 
 
 
-| Method    | URL                                           | Body                      | Description                                                  |
-| :-------: | :-------------------------------------------- | :---------                | :----------------------------------------------------------- |
-| GET       | http://localhost:44326/api/auth/authorization  | <code>{<br/>"value": "yourJWT"<br/>}</code> | returns Ok() if authorization is successful
-| POST       | http://localhost:44326/api/auth/authentification | <code>{<br/>"login": "yourLogin",<br/>"password": "yourPassword"<br/>}</code> | returns Ok() if authentification is successful
-| POST       | http://localhost:44326/api/auth/creation | <code>{<br/>"login": "yourLogin",<br/>"password": "yourPassword"<br/>}</code> | returns new ObjectResult(user) if succesful
+# WeatherForecastController
+| Method    | URL                                                | Body       | Description                                                      |
+| :-------: | :--------------------------------------------      | :--------- | :-----------------------------------------------------------     |
+| GET         | http://localhost:44326/api/weatherforecast/city  || Get a single forecast data by "city" field.
+| POST        | http://localhost:44326/api/weatherforecast/city  || Create a forecast by "city" field.
+| PUT         | http://localhost:44326/api/weatherforecast/city  || Update a forecast data by "city" field.
+| DELETE      | http://localhost:44326/api/weatherforecast/city  || Delete forecast by "city" field.
+| GET         | http://localhost:44326/api/weatherforecast       || Get all forecasts.
+| PATCH       | http://localhost:44326/api/weatherforecast       || Update all forecasts data.
+
+| POST       | http://localhost:44326/api/weatherforecast        |          | Create forecasts by JSON array of "cities".
+
+
+
+
+# AuthController
+| Method    | URL                                           | Body       | Description                                                 |
+| :-------: | :-------------------------------------------- | :--------- | :-----------------------------------------------------------|
+| POST      | http://localhost:44326/api/auth/create        |<pre lang="json">{<br/>"login": "yourLogin",<br/>"password": "yourPassword"<br/>}</pre>| Create a single user. Login(unique, length: [2;20]) and password(length: [5;100]) are required.
+| PUT       | http://localhost:44326/api/auth/update        |<code>{<br/>"Item1": {<br/>"login": "oldLogin",<br/>"password": "oldPassword"<br/>},<br/>"Item2": {<br/>"login": "newLogin",<br/>"password": "newPassword"<br/>}<br/>}</code>| Update the user by changing property values. Item1 represents OldUser(old login and password are required), and Item2 representes NewUser(all changes are here).
+| DELETE    | http://localhost:44326/api/auth/delete        |(User model as in /create)| Deletes the user(password and login are required).
+| POST      | http://localhost:44326/api/auth/authentificate|(User model as in /create)| Authentificate the user by creating JWT.
+| GET      | http://localhost:44326/api/auth/authorize      |<pre lang="json">{<br/>"value": "JWTvalue"<br/>}</pre>| Authorize the user by JWT.

@@ -122,7 +122,6 @@ namespace restful_API.Controllers
         {
             return _db.WeatherForecasts.ToArray();
         }
-        //обновление данных всех городов
         [HttpPatch]
         public ActionResult UpdateAllForecasts()
         {
