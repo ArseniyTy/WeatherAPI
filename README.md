@@ -76,9 +76,10 @@
 }
 ```
 #### JSON JWTWithObject model:
+###### (here object is an array of string, but it could be any other one)
 ```json
 {
   "JwtValue": "yourJWTValue",
-  "Object": [ "Minsk", "Kiev", "London" ]       //here object is an array of "string", but it could be any other one
+  "Object": [ "Minsk", "Kiev", "London" ]
 }
 ```
