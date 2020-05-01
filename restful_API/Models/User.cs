@@ -4,13 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using restful_API.Models.Interfaces;
-using System.Security.Cryptography;
 using System.ComponentModel.DataAnnotations;
-//https://codereview.stackexchange.com/questions/93614/salt-generation-in-c
-//(RNGCryptoServiceProvider)
-//(SHA512) - для пароля і для jwt
-
-//https://docs.microsoft.com/ru-ru/aspnet/core/mvc/models/validation?view=aspnetcore-3.1 - валідація моделі
 
 namespace restful_API.Models
 {
@@ -29,6 +23,7 @@ namespace restful_API.Models
             ErrorMessage = "Password length should be in diaposon [5;100]")]
         [DataMember]
         public string Password { get; set; }
+        public string PasswordSalt { get; set; }
 
         public virtual IList<UserWeatherForecast> UserWeatherForecasts { get; set; }
         public JWT JWT { get; set; }

@@ -23,6 +23,10 @@ namespace restful_API.Controllers
             if (userFromDb != null)
                 return BadRequest("The user with such a login currently exists");
 
+
+            user.PasswordSalt = SecurityService.GetSalt();
+            user.Password = SecurityService.GetHash(user.Password + user.PasswordSalt);
+
             _db.Users.Add(user);
             _db.SaveChanges();
             return new ObjectResult(user);
@@ -39,7 +43,7 @@ namespace restful_API.Controllers
                 FirstOrDefault(u => u.Login == oldUser.Login);
             if (userFromDb == null)
                 return NotFound("There is no such a user");
-            if (userFromDb.Password != oldUser.Password)
+            if (userFromDb.Password != SecurityService.GetHash(oldUser.Password + userFromDb.PasswordSalt))
                 return new ForbidResult("Password is incorrect");
 
 
@@ -59,7 +63,7 @@ namespace restful_API.Controllers
                 FirstOrDefault(u => u.Login == user.Login);
             if (userFromDb == null)
                 return NotFound("There is no such a user");
-            if (userFromDb.Password != user.Password)
+            if (userFromDb.Password != SecurityService.GetHash(user.Password + userFromDb.PasswordSalt))
                 return new ForbidResult("Password is incorrect");
 
 
@@ -79,7 +83,7 @@ namespace restful_API.Controllers
                 FirstOrDefault(u => u.Login == user.Login);
             if (userFromDb == null)
                 return NotFound("There is no such a user");
-            if (userFromDb.Password != user.Password)
+            if (userFromDb.Password != SecurityService.GetHash(user.Password + userFromDb.PasswordSalt))
                 return new ForbidResult("Password is incorrect");
 
             //удаляем старую jwt, еслі она есть
@@ -96,7 +100,7 @@ namespace restful_API.Controllers
                 ID = id,
                 UserLogin = userFromDb.Login,
                 Datetime = DateTime.Now,
-                Value = id.ToString() + datetime.ToString()
+                Value = SecurityService.GetHash(id.ToString() + datetime.ToString() + userFromDb.Login)
             };
             _db.JWTs.Add(jwt);
             userFromDb.JWT = jwt;
@@ -119,6 +123,9 @@ namespace restful_API.Controllers
 
             return Ok(userFromDb);
         }
+
+
+
 
         // в POST переделать authentificate ??? - позыріть когда какой  і как в целом настроіть работу JWT токена 
     }
