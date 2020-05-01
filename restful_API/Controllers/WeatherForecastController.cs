@@ -20,18 +20,23 @@ namespace restful_API.Controllers
         {
             _db = context;
         }
-            
-        [HttpGet]
-        public IEnumerable<WeatherForecast> GetAll()
+
+        [HttpGet("{city}")]
+        public ActionResult<WeatherForecast> GetForecast(string city)
         {
-            return _db.WeatherForecasts.ToArray();
+            var forecastFromDb = _db.WeatherForecasts.FirstOrDefault(f => f.City == city);
+            if (forecastFromDb==null)
+            {
+                return NotFound("There is no such a forecast");
+            }
+            return new ObjectResult(forecastFromDb);
         }
 
-        [HttpPost]
-        public ActionResult CreateForecast([FromBody]WeatherForecast data)
+        [HttpPost("{city}")]
+        public ActionResult CreateForecast(string city)
         {
             var cities = _db.WeatherForecasts.Select(o => o.City).ToArray();
-            if (cities.Contains(data.City))
+            if (cities.Contains(city))
             {
                 return BadRequest("This forecast already exists");
             }
@@ -39,7 +44,7 @@ namespace restful_API.Controllers
             string result = "";
             try
             {
-                result = GetDataFromAnotherAPI(data.City);
+                result = GetDataFromAnotherAPI(city);
             }
             catch (Exception ex)
             {
@@ -54,7 +59,7 @@ namespace restful_API.Controllers
             {
                 Id = Guid.NewGuid(),
                 Date = DateTime.Now,
-                City = data.City,
+                City = city,
                 Temperature = temperature,
                 Summary = summary
             };
@@ -65,10 +70,64 @@ namespace restful_API.Controllers
             return Ok(newForecast);
         }
 
+
+        [HttpPut("{city}")]
+        public ActionResult<WeatherForecast> UpdateForecast(string city)
+        {
+            var forecast = _db.WeatherForecasts.FirstOrDefault(f => f.City == city);
+            if (forecast == null)
+                return NotFound("There is no such a forecast");
+
+
+            string result = "";
+            try
+            {
+                result = GetDataFromAnotherAPI(city);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            JObject o = JObject.Parse(result);
+
+            string summary = (string)o["weather"][0]["main"];
+            float temperature = (float)o["main"]["temp"] - (float)273.15;
+
+            forecast.Summary = summary;
+            forecast.Temperature = temperature;
+            forecast.Date = DateTime.Now;
+
+
+            _db.SaveChanges();
+            return Ok();
+        }
+
+        [HttpDelete("{city}")]
+        public ActionResult<WeatherForecast> DeleteForecast(string city)
+        {
+            var forecastFromDb = _db.WeatherForecasts.FirstOrDefault(f => f.City == city);
+            if (forecastFromDb == null)
+                return NotFound("There is no such a forecast");
+
+            _db.Remove(forecastFromDb);
+            _db.SaveChanges();
+            return Ok();
+        }
+
+
+
+
+        [HttpGet]
+        public IEnumerable<WeatherForecast> GetAllForecasts()
+        {
+            return _db.WeatherForecasts.ToArray();
+        }
         //обновление данных всех городов
         [HttpPatch]
-        public ActionResult UpdateForecastsData()
+        public ActionResult UpdateAllForecasts()
         {
+            var errorMessages= new List<string>();
+
             foreach (var forecast in _db.WeatherForecasts.ToList())
             {
                 string result="";
@@ -76,9 +135,10 @@ namespace restful_API.Controllers
                 {
                     result = GetDataFromAnotherAPI(forecast.City);
                 }
+                //добавляем в спісок ошібок, который вернём в конце
                 catch(Exception ex)
                 {
-                    return BadRequest(ex.Message);
+                    errorMessages.Add(forecast.City + "(error occurred): " + ex.Message);
                 }
                 JObject o = JObject.Parse(result);
 
@@ -90,7 +150,7 @@ namespace restful_API.Controllers
                 forecast.Date = DateTime.Now;
             }
             _db.SaveChanges();
-            return Ok();
+            return Ok(errorMessages);
         }
 
 
@@ -121,8 +181,5 @@ namespace restful_API.Controllers
 
             return result.ToString();
         }
-
-
-        //DELETE - удаленіе прогнозов
     }
 }
