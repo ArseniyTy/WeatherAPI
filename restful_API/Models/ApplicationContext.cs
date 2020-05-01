@@ -26,11 +26,13 @@ namespace restful_API.Models
 
             modelBuilder.Entity<UserWeatherForecast>()
                 .HasOne(uwf => uwf.User)
-                .WithMany(u => u.UserWeatherForecasts);
+                .WithMany(u => u.UserWeatherForecasts)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<UserWeatherForecast>()
                 .HasOne(uwf => uwf.WeatherForecast)
-                .WithMany(w => w.UserWeatherForecasts);
+                .WithMany(w => w.UserWeatherForecasts)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<User>()
                 .HasOne(u => u.JWT)

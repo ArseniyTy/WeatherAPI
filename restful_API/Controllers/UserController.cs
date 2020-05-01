@@ -39,11 +39,11 @@ namespace restful_API.Controllers
         }
 
 
-        [HttpPut("citiesAdd")]
-        public ActionResult UpdateUserCityList([FromBody]JWTWithObject<List<string>> JWTWithCityName)
+        [HttpPost("addCities")]
+        public ActionResult AddCitiesToUser([FromBody]JWTWithObject<List<string>> JWTWithCityNames)
         {
             var jwtFromDb = _db.JWTs
-                .FirstOrDefault(o => o.Value == JWTWithCityName.JwtValue);
+                .FirstOrDefault(o => o.Value == JWTWithCityNames.JwtValue);
             if (jwtFromDb == null)
                 return NotFound("No such JWT");
 
@@ -54,9 +54,9 @@ namespace restful_API.Controllers
 
             //подгружаем его прогнозы для нахожденія повторок
             _db.Entry(userFromDb).Collection(u => u.UserWeatherForecasts).Load();
-            
+
             //для каждого города із переданного спіска
-            foreach (var city in JWTWithCityName.Object)
+            foreach (var city in JWTWithCityNames.Object)
             {
                 var forecastFromDb = _db.WeatherForecasts
                 .FirstOrDefault(f => f.City == city);
@@ -82,8 +82,44 @@ namespace restful_API.Controllers
             return Ok();
         }
 
-        //Наверное в POST переделать верхній 
-        //DELETE - удаляет нужный спісок городов (по жвт)
-        //PUT/PATCH - обновляет уже імеюшийся список (по жвт)
+        [HttpDelete("deleteCities")]
+        public ActionResult DeleteCitiesOfUser([FromBody]JWTWithObject<List<string>> JWTWithCityNames)
+        {
+            var jwtFromDb = _db.JWTs
+                .FirstOrDefault(o => o.Value == JWTWithCityNames.JwtValue);
+            if (jwtFromDb == null)
+                return NotFound("No such JWT");
+
+            var userFromDb = _db.Users
+                .FirstOrDefault(o => o.JWT == jwtFromDb);
+            if (userFromDb == null)
+                return NotFound("No such JWT");
+
+            //подгружаем его прогнозы для нахожденія повторок
+            _db.Entry(userFromDb).Collection(u => u.UserWeatherForecasts).Load();
+
+            //для каждого города із переданного спіска
+            foreach (var city in JWTWithCityNames.Object)
+            {
+                var forecastFromDb = _db.WeatherForecasts
+                .FirstOrDefault(f => f.City == city);
+                //еслі данного города нет в прогнозах, то нічего не делаем
+                if (forecastFromDb == null)
+                    continue;
+
+                var uwf = userFromDb.UserWeatherForecasts.
+                    FirstOrDefault(uwf => uwf.WeatherForecastId == forecastFromDb.Id);
+                //еслі данного города нет в спіске у юзера, то нічего не делаем
+                if (uwf == null)
+                    continue;
+
+                _db.UserWeatherForecasts.Remove(uwf);
+            }
+            _db.SaveChanges();
+            return Ok();
+
+        }
+
     }
+
 }
